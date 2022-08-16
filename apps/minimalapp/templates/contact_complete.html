@@ -11,5 +11,16 @@
 
   <body>
     <h2>問い合わせ完了</h2>
+
+    {% with messages =  get_flashed_messages(request) %}
+    {% if messages %}
+    <ul>
+      {% for message in messages %}
+      <li class="flash">{{ message.message }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    {% endwith %}
+
   </body>
 </html>
