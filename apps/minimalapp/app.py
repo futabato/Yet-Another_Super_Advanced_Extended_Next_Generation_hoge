@@ -2,6 +2,7 @@ from fastapi import FastAPI, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from pydantic import BaseSettings
 
 app = FastAPI()
 
@@ -9,6 +10,15 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 templates = Jinja2Templates(directory="templates")
+
+class Config(BaseSettings):
+    SECRET_KEY: str = "hogefugapiyo"
+
+config = Config()
+
+@app.get('/')
+def index():
+    return {'message': config.SECRET_KEY}
 
 @app.get("/contact")
 def contact(request: Request):
