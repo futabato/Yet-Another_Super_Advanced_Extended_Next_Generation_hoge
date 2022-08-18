@@ -1,5 +1,8 @@
+import sys
+from logging import DEBUG, StreamHandler, getLogger
 from typing import Any, Optional
 
+from debug_toolbar.middleware import DebugToolbarMiddleware
 from email_validator import EmailNotValidError, validate_email
 from fastapi import FastAPI, Form, Request
 from fastapi.exception_handlers import (http_exception_handler,
@@ -17,6 +20,7 @@ middleware = [
     Middleware(SessionMiddleware, secret_key='super-secret')
 ]
 app = FastAPI(middleware=middleware)
+app.add_middleware(DebugToolbarMiddleware)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
@@ -35,6 +39,13 @@ templates.env.globals['get_flashed_messages'] = get_flashed_messages
 @app.get("/contact")
 def contact(request: Request):
     return templates.TemplateResponse("contact.html", {"request": request})
+
+logger = getLogger(__name__)
+handler = StreamHandler(sys.stdout)
+handler.setLevel(DEBUG)
+logger.addHandler(handler)
+logger.setLevel(DEBUG)
+
 
 @app.post("/contact/complete", response_class=RedirectResponse)
 def contact_complete(request: Request, username: Optional[str] = Form(None), email: Optional[str] = Form(None), description: Optional[str] = Form(None)):
@@ -60,6 +71,7 @@ def contact_complete(request: Request, username: Optional[str] = Form(None), ema
         is_valid = False
 
     if not is_valid:
+        logger.info('入力ミス ++')
         return RedirectResponse("/contact", status_code=303)
     
     # メールを送る
